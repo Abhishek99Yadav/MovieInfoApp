@@ -13,12 +13,11 @@ class NetworkManager {
     
     private init() {}
     
-    func request(url: String, completion: @escaping (Result<Data, Error>) -> Void) {
-        AF.request(url).responseJSON { response in
+    func request<T: Decodable>(url: String, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
+        AF.request(url).responseDecodable(of: T.self) { response in
             switch response.result {
-            case .success(let value):
-//                print("JSON Response: \(value)")
-                completion(.success(response.data ?? Data()))
+            case .success(let decodedResponse):
+                completion(.success(decodedResponse))
             case .failure(let error):
                 completion(.failure(error))
             }

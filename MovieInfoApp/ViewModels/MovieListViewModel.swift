@@ -14,28 +14,21 @@ class MovieListViewModel {
     var reloadTableView: (() -> Void)?
     
     func fetchMovies() {
-        guard !isFetching else { return }
-        isFetching = true
-        
-        NetworkManager.shared.request(url: Constants.API.baseURL) { (result: Result<Data, Error>) in
-            self.isFetching = false
-            switch result {
-            case .success(let data):
-                do {
-                    let decoder = JSONDecoder()
-                    let response = try decoder.decode(MoviesResponse.self, from: data)
+            guard !isFetching else { return }
+            isFetching = true
+            
+            NetworkManager.shared.request(url: Constants.API.baseURL, responseType: MoviesResponse.self) { (result: Result<MoviesResponse, Error>) in
+                self.isFetching = false
+                switch result {
+                case .success(let response):
                     self.movies.append(contentsOf: response.data)
                     self.filteredMovies = self.movies
                     self.reloadTableView?()
-                } catch {
-                    print("Decoding error: \(error)")
+                case .failure(let error):
+                    print("Error fetching movies: \(error)")
                 }
-            case .failure(let error):
-                print("Error fetching movies: \(error)")
             }
         }
-    }
-    
     func numberOfRows() -> Int {
         return filteredMovies.count
     }
